@@ -279,21 +279,9 @@ public class GJsonObject {
 				if (!parsingString) {
 					// NOT parsing string
 
-					// remove \n
+					// remove \r \n , space and tab
 					while (true) {
-						if (integer == 13) {
-							reader.mark(1);
-							if (reader.read() == 10) {
-								integer = reader.read();
-								ch = (char) integer;
-								builder.append(ch);
-							} else reader.reset();
-						} else break;
-					}
-
-					// remove white space / tab
-					while (true) {
-						if (ch == ' ' || ch == '	') {
+						if (integer == 13 || integer == 10 || ch == ' ' || ch == '	') {
 							integer = reader.read();
 							ch = (char) integer;
 							builder.append(ch);
@@ -313,11 +301,11 @@ public class GJsonObject {
 						} else isExpected = true;
 
 						if (!isExpected) {
-							System.out.println("Json so far: \n" + builder.toString() + "<^error");
+							System.out.println("Json so far: \n" + builder.toString() + "<--error");
 
 							String expectedArray = "[";
 							for (int i = 0; i < expectedChars.size(); i++) {
-								if (i != expectedChars.size() - 1) expectedArray += expectedChars.get(i) + ", ";
+								if (i != expectedChars.size() - 1) expectedArray += expectedChars.get(i) + "";
 								else expectedArray += expectedChars.get(i);
 							}
 							expectedArray += "]";
@@ -413,6 +401,9 @@ public class GJsonObject {
 							}
 						}
 
+						expectedChars.add('}');
+						expectedChars.add(',');
+
 						braces--;
 					}
 
@@ -464,7 +455,7 @@ public class GJsonObject {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		
 		return lastNode;
 	}
 }

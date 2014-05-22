@@ -9,7 +9,7 @@ public class GImageView extends GView {
 
 	public GColor color = GColor.WHITE;
 
-	private int xs, ys;
+	public String texture = null;
 
 	public GImageView() {
 	}
@@ -17,23 +17,7 @@ public class GImageView extends GView {
 	protected void drawInternal(GRenderer renderer, float x, float y) {
 		super.drawInternal(renderer, x, y);
 
-		GView viableContainer = this;
-		while (true) {
-			if (viableContainer == null) break;
-
-			if (viableContainer.getWidth() != 0 && viableContainer.getHeight() != 0) {
-				break;
-			}
-
-			viableContainer = viableContainer.parent;
-		}
-
-		if (viableContainer != null) {
-			float width = viableContainer.getWidth();
-			float height = viableContainer.getHeight();
-
-			renderer.draw(x - width / 2, y - height / 2, width, height, new GSprite("image1.png", xs, ys, 50, 50), color);
-		}
+		renderer.draw(x - getWidth() / 2, y - getHeight() / 2, getWidth(), getHeight(), new GSprite(texture), color);
 	}
 
 	protected void loadInternal(GJsonObject json) {
@@ -43,6 +27,8 @@ public class GImageView extends GView {
 			float[] values = json.toFloatArray();
 
 			color = new GColor(values[0], values[1], values[2], values[3]);
+		} else if (json.name.equals("Path")) {
+			texture = json.data;
 		}
 	}
 

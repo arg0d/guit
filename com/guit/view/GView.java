@@ -10,14 +10,8 @@ import com.guit.renderer.GRenderer;
 
 public class GView {
 
-	public enum ViewPosition {
-		CENTER, NORTH, SOUTH, WEST, EAST
-	}
-
 	public float x, y, width, height;
 	public String tag = "GView default.";
-
-	public ViewPosition viewPosition = ViewPosition.CENTER;
 
 	protected GView parent;
 	protected List<GView> children = new ArrayList<GView>();
@@ -33,7 +27,10 @@ public class GView {
 
 	public boolean visible = true;
 
-	protected float bufferWidth, bufferHeight;
+	private GHorizontalPosition horizontalPosition = GHorizontalPosition.CENTER;
+	private GVerticalPosition verticalPosition = GVerticalPosition.CENTER;
+
+	protected float bufferx, buffery, bufferWidth, bufferHeight;
 
 	public GView() {
 	}
@@ -51,13 +48,11 @@ public class GView {
 	}
 
 	protected final void draw(GRenderer renderer, float x, float y) {
+
 		for (Action action : initRender) {
 			action.performAction();
 		}
 		initRender.clear();
-
-		bufferWidth = width;
-		bufferHeight = height;
 
 		if (visible) reposition(renderer, x, y);
 	}
@@ -68,28 +63,37 @@ public class GView {
 			x = getWidth() / 2;
 			y = getHeight() / 2;
 		} else if (parent != null) {
-			switch (viewPosition) {
+
+			switch (horizontalPosition) {
 			case CENTER:
 				break;
-			case NORTH:
-				y -= parent.getHeight() / 2 + getHeight() / 2;
+			case LEFT:
+				x = x - parent.getWidth() / 2 + getWidth() / 2;
 				break;
-			case SOUTH:
-				y += parent.getHeight() / 2 - getHeight() / 2;
+			case RIGHT:
+				x = x + parent.getWidth() / 2 - getWidth() / 2;
 				break;
-			case WEST:
-				x -= parent.getWidth() / 2 + getWidth() / 2;
+			}
+
+			switch (verticalPosition) {
+			case CENTER:
 				break;
-			case EAST:
-				x += parent.getWidth() / 2 - getWidth() / 2;
+			case DOWN:
+				y = y + parent.getHeight() / 2 - getHeight() / 2;
 				break;
-			default:
+			case TOP:
+				y = y - parent.getHeight() / 2 + getHeight() / 2;
 				break;
 			}
 		}
 
 		x += getX();
 		y += getY();
+
+		bufferx = x;
+		buffery = y;
+		bufferWidth = getWidth();
+		bufferHeight = getHeight();
 
 		drawInternal(renderer, x, y);
 
@@ -119,22 +123,25 @@ public class GView {
 			x = getWidth() / 2;
 			y = getHeight() / 2;
 		} else if (parent != null) {
-			switch (viewPosition) {
+			switch (horizontalPosition) {
 			case CENTER:
 				break;
-			case NORTH:
-				y -= parent.getHeight() / 2 + getHeight() / 2;
+			case LEFT:
+				x = x - parent.getWidth() / 2 + getWidth() / 2;
 				break;
-			case SOUTH:
-				y += parent.getHeight() / 2 - getHeight() / 2;
+			case RIGHT:
+				x = x + parent.getWidth() / 2 - getWidth() / 2;
 				break;
-			case WEST:
-				x -= parent.getWidth() / 2 + getWidth() / 2;
+			}
+
+			switch (verticalPosition) {
+			case CENTER:
 				break;
-			case EAST:
-				x += parent.getHeight() / 2 - getWidth() / 2;
+			case DOWN:
+				y = y + parent.getHeight() / 2 - getHeight() / 2;
 				break;
-			default:
+			case TOP:
+				y = y - parent.getHeight() / 2 + getHeight() / 2;
 				break;
 			}
 		}
@@ -166,12 +173,18 @@ public class GView {
 	}
 
 	public void load(GJsonObject json) {
+		loadPrivate(json.getChildren().get(0));
+	}
+
+	private void loadPrivate(GJsonObject json) {
 		removeSubViews();
 
 		for (GJsonObject child : json.getChildren()) {
 
 			{
 				GJsonObject typeJson = child.getNode("Type");
+				if (child.name.equals("ButtonsList")) {
+				}
 
 				if (typeJson != null) {
 
@@ -185,9 +198,10 @@ public class GView {
 						else if (strType.equals("ImageView")) view = new GImageView();
 						else if (strType.equals("ListView")) view = new GListView();
 						else if (strType.equals("DragView")) view = new GDragView();
+						else if (strType.equals("Button")) view = new GButton();
 
 						view.tag = child.name;
-						view.load(child);
+						view.loadPrivate(child);
 						addSubView(view);
 					}
 
@@ -223,11 +237,6 @@ public class GView {
 		} else if (json.name.equals("Scale")) {
 			minScale = json.getFloat();
 			setScale(1f);
-		} else if (json.name.equals("Position")) {
-			if (json.data.equals("North")) this.viewPosition = ViewPosition.NORTH;
-			else if (json.data.equals("South")) this.viewPosition = ViewPosition.SOUTH;
-			else if (json.data.equals("West")) this.viewPosition = ViewPosition.WEST;
-			else if (json.data.equals("East")) this.viewPosition = ViewPosition.EAST;
 		} else if (json.name.equals("InitRender")) {
 
 			for (final GJsonObject initRenderJson : json.getChildren()) {
@@ -252,6 +261,10 @@ public class GView {
 			this.absolute = json.getBoolean();
 		} else if (json.name.equals("Visible")) {
 			this.visible = json.getBoolean();
+		} else if (json.name.equals("Vertical")) {
+			verticalPosition = GVerticalPosition.getPosition(json.data);
+		} else if (json.name.equals("Horizontal")) {
+			horizontalPosition = GHorizontalPosition.getPosition(json.data);
 		}
 	}
 
@@ -277,8 +290,7 @@ public class GView {
 
 	public GView getSubView(String tag) {
 		for (GView child : children) {
-			GView childView = child.getSubView(tag);
-			if (childView != null) return childView;
+			if (child.tag.equals(tag)) return child;
 		}
 
 		return null;
@@ -311,5 +323,9 @@ public class GView {
 	public GView setScale(float scale) {
 		this.maxScale = minScale * scale;
 		return this;
+	}
+
+	public List<GView> getAllSubviews() {
+		return children;
 	}
 }

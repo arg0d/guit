@@ -10,10 +10,10 @@ public class GListView extends GView {
 		VERTICAL, HORIZONTAL
 	}
 
-	public float spacing = 5;
+	public float spacing = 0;
 	public GOrientation orientation = GOrientation.HORIZONTAL;
 
-	public int direction = 0;
+	public int direction = 1;
 
 	public GListView() {
 	}
@@ -34,6 +34,7 @@ public class GListView extends GView {
 			} else if (this.direction == -1) {
 				pivot = -totalWidth;
 			}
+			bufferx = x + pivot;
 
 			float widthSoFar = 0;
 
@@ -42,7 +43,7 @@ public class GListView extends GView {
 
 				child.draw(renderer, x + pivot + widthSoFar + child.getWidth() / 2, y);
 
-				widthSoFar += child.getWidth() + spacing;
+				widthSoFar += child.getWidth() + spacing * getScale();
 			}
 			break;
 		}
@@ -69,7 +70,7 @@ public class GListView extends GView {
 
 				child.draw(renderer, x, y + pivot + heightSoFar + child.getHeight() / 2);
 
-				heightSoFar += child.getWidth() + spacing;
+				heightSoFar += child.getWidth() + spacing * getScale();
 			}
 			break;
 		}
@@ -97,7 +98,7 @@ public class GListView extends GView {
 
 				child.collide(event, x + pivot + widthSoFar + child.getWidth() / 2, y);
 
-				widthSoFar += child.getWidth() + spacing;
+				widthSoFar += child.getWidth() + spacing * getScale();
 			}
 			break;
 		}
@@ -119,7 +120,7 @@ public class GListView extends GView {
 
 				child.collide(event, x, y + pivot + heightSoFar + child.getWidth() / 2);
 
-				heightSoFar += child.getWidth() + spacing;
+				heightSoFar += child.getWidth() + spacing * getScale();
 			}
 			break;
 		}
@@ -172,6 +173,8 @@ public class GListView extends GView {
 			else if (dir == 0) this.direction = 0;
 			else if (dir > 0) this.direction = 1;
 
+		} else if (json.name.equals("Margin")) {
+			spacing = json.getFloat();
 		}
 	}
 

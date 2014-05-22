@@ -5,6 +5,10 @@ public class GSprite {
 	public String texture;
 	public int x, y, width, height;
 
+	public GSprite(String texture) {
+		this(texture, 0, 0, -1, -1);
+	}
+
 	public GSprite(String texture, int x, int y, int width, int height) {
 		this.texture = texture;
 		this.x = x;
@@ -12,5 +16,5 @@ public class GSprite {
 		this.width = width;
 		this.height = height;
 	}
-	
+
 }
