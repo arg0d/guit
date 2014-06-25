@@ -10,7 +10,6 @@ import com.guit.view.GListView.GOrientation;
 public class GDragView extends GView {
 
 	public float offset = 0;
-
 	public GOrientation orientation = GOrientation.HORIZONTAL;
 
 	private GTouchEvent lastEvent = null;
@@ -43,7 +42,7 @@ public class GDragView extends GView {
 
 			if (offset < x + getWidth() / 2 - x - fitView.bufferWidth) {
 				float pos = x + getWidth() / 2 - x - fitView.bufferWidth;
-				
+
 				int dir = Maths.dir(pos - offset);
 
 				offset += dir * 1 + dir * (Maths.abs(pos - offset) / 10);
@@ -92,6 +91,9 @@ public class GDragView extends GView {
 
 		if (json.name.equals("Fit")) {
 			this.fit = json.data;
+		} else if (json.name.equals("Axis")) {
+			if (json.data.equals("Vertical")) orientation = GOrientation.VERTICAL;
+			else if (json.data.equals("Horizontal")) orientation = GOrientation.HORIZONTAL;
 		}
 	}
 

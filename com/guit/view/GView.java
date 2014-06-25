@@ -32,6 +32,9 @@ public class GView {
 
 	protected float bufferx, buffery, bufferWidth, bufferHeight;
 
+	private GView root = null;
+	protected GView self = this;
+
 	public GView() {
 	}
 
@@ -44,7 +47,8 @@ public class GView {
 	}
 
 	public void draw() {
-		draw(GuitHook.getRenderer(), getX() + getWidth() / 2, getY() + getHeight() / 2);
+		draw(GuitHook.getInstance().getRenderer(), getX() + getWidth() / 2, getY() + getHeight() / 2);
+		GuitHook.getInstance().getRenderer().flush();
 	}
 
 	protected final void draw(GRenderer renderer, float x, float y) {
@@ -95,9 +99,8 @@ public class GView {
 		bufferWidth = getWidth();
 		bufferHeight = getHeight();
 
-		drawInternal(renderer, x, y);
-
 		drawChildren(renderer, x, y);
+		drawInternal(renderer, x, y);
 
 	}
 
@@ -179,12 +182,12 @@ public class GView {
 	private void loadPrivate(GJsonObject json) {
 		removeSubViews();
 
+		this.tag = json.name;
+
 		for (GJsonObject child : json.getChildren()) {
 
 			{
 				GJsonObject typeJson = child.getNode("Type");
-				if (child.name.equals("ButtonsList")) {
-				}
 
 				if (typeJson != null) {
 
@@ -199,6 +202,7 @@ public class GView {
 						else if (strType.equals("ListView")) view = new GListView();
 						else if (strType.equals("DragView")) view = new GDragView();
 						else if (strType.equals("Button")) view = new GButton();
+						else if (strType.equals("Label")) view = new GLabel();
 
 						view.tag = child.name;
 						view.loadPrivate(child);
@@ -212,6 +216,16 @@ public class GView {
 
 		}
 
+		setRoot(this);
+		
+	}
+
+	private void setRoot(GView rootView) {
+		if (rootView != this) this.root = rootView;
+		
+		for (GView child : children) {
+			child.setRoot(rootView);
+		}
 	}
 
 	protected void loadInternal(GJsonObject json) {
@@ -327,5 +341,9 @@ public class GView {
 
 	public List<GView> getAllSubviews() {
 		return children;
+	}
+
+	public GView getRoot() {
+		return root;
 	}
 }

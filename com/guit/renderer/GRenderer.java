@@ -1,5 +1,7 @@
 package com.guit.renderer;
 
+import com.guit.core.vec2;
+
 public abstract class GRenderer {
 
 	public static final String BAD_VERTEX_AMOUNT_MESSAGE = "The vertex array specified is incorrect. Length has to be 8 (4 vertices each having 2 components(x, y))";
@@ -13,6 +15,10 @@ public abstract class GRenderer {
 	private int position = 0;
 	private String texture = "";
 
+	protected boolean handleTextureSwitch = false;
+
+	private static long fontID = 0;
+
 	public GRenderer(int spriteAmount) {
 		this.spriteAmount = spriteAmount;
 
@@ -21,11 +27,29 @@ public abstract class GRenderer {
 
 	protected abstract void flush(float[] vertices);
 
-	protected abstract void bindTexture(String path);
+	protected abstract void bindTexture(String texture);
+
+	protected abstract vec2 drawText(String textureID, String text, String font, String style, int size, float[] colors, float scale, float wrapWidth);
+
+	protected abstract void deleteTex(String textureID);
 
 	public final void flush() {
 		flush(vertices);
 		position = 0;
+	}
+
+	public final GTexture renderText(String text, String strFont, String style, int size, GColor color, float wrapWidth) {
+		fontID++;
+
+		String textureID = "font=" + fontID;
+
+		vec2 dimensions = drawText(textureID, text, strFont, style, size, new float[] { color.r, color.g, color.b, color.a }, 1, wrapWidth);
+
+		return new GTexture(textureID, dimensions.getX(), dimensions.getY());
+	}
+
+	public final void deleteTexture(String textureID) {
+		deleteTex(textureID);
 	}
 
 	public final void draw(float x, float y, float width, float height, GSprite sprite) {
@@ -34,15 +58,17 @@ public abstract class GRenderer {
 
 	public final void draw(float x, float y, float width, float height, GSprite sprite, GColor color) {
 
-		if (!this.texture.equals(sprite.texture)) {
-			flush();
-			this.texture = sprite.texture;
-			bindTexture(texture);
-		}
+		if (handleTextureSwitch) {
+			if (!this.texture.equals(sprite.texture)) {
+				flush();
+				this.texture = sprite.texture;
+				bindTexture(texture);
+			}
+		} else bindTexture(sprite.texture);
 
 		if (position >= this.spriteAmount) flush();
 
-		int pos = position * (4 + 4 + 4);
+		int pos = position * (4 + 4);
 
 		int index = 0;
 
@@ -50,11 +76,6 @@ public abstract class GRenderer {
 		vertices[pos + index++] = y;
 		vertices[pos + index++] = width;
 		vertices[pos + index++] = height;
-
-		vertices[pos + index++] = sprite.x;
-		vertices[pos + index++] = sprite.y;
-		vertices[pos + index++] = sprite.x + sprite.width;
-		vertices[pos + index++] = sprite.y + sprite.height;
 
 		vertices[pos + index++] = color.r;
 		vertices[pos + index++] = color.g;
@@ -64,11 +85,11 @@ public abstract class GRenderer {
 		position++;
 	}
 
-	protected int getPosition() {
+	protected final int getPosition() {
 		return position;
 	}
 
-	public int getCapacity() {
+	public final int getCapacity() {
 		return spriteAmount;
 	}
 
